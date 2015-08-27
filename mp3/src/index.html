@@ -1,0 +1,135 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>MP3 - Teapot</title>
+		<link href='http://fonts.googleapis.com/css?family=Lato:100,300,400,700|Merriweather:400,300italic,300,700,900' rel='stylesheet' type='text/css'>
+		
+		<link rel="stylesheet" type="text/css" href="main.css">
+	</head>
+	<body>
+		<div class="leader">MP3</div>
+		<h2 class="title">Teapot</h2>
+		<div id="cover"></div>
+		<div id="content">
+			<canvas id="canvas">Sorry, your browser doesn't seem to support the canvas element.</canvas>
+		</div>
+		
+		<div id="fpsMeter"></div>
+		<p class="description">A modest teapot.  But made out of what?  Press esc to enjoy the dark.</p>
+		<ul class="choiceList">
+			<li class="choice selected" data-choice="wood.jpg">wood</li>
+			<li class="choice" data-choice="bamboo.jpg">bamboo</li>
+			<li class="choice" data-choice="cushion.jpg">cushion</li>
+			<li class="choice" data-choice="elephant.jpg">elephant</li>
+			<li class="choice" data-choice="leather.jpg">leather</li>
+			<li class="choice" data-choice="silk.jpg">silk</li>
+			<li class="choice" data-choice="silk2.jpg">silk2</li>
+			<li class="choice" data-choice="sponge.jpg">sponge</li>
+			<li class="choice" data-choice="sponge2.jpg">sponge2</li>
+			<li class="choice" data-choice="orange.jpg">orange</li>
+			<li class="choice" data-choice="meat.jpeg">meat</li>
+			<li class="choice" data-choice="bread.jpg">bread</li>
+		</ul>
+
+		<script id="vertex-shader" type="x-shader/x-vertex">
+			// Create a basic vertex shader that sets the positions.
+			attribute vec3 aVertexPosition;
+		    attribute vec3 aVertexNormal;
+		    attribute vec2 aTextureCoord;
+		    attribute vec2 aWorldTextureCoord;
+
+		    // Create a uniform model-view and perspective matrix.
+		    uniform mat4 uMVMatrix;
+      		uniform mat4 uPMatrix;
+      		uniform mat3 uNMatrix;
+		    
+		    varying vec2 vTextureCoord;
+		    varying vec2 vWorldTextureCoord;
+		    varying vec3 vTransformedNormal;
+		    varying vec4 vPosition;
+		    
+		    void main(void) {
+		    	vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+		    	gl_Position = uPMatrix * vPosition;
+		    	vTextureCoord = aTextureCoord;
+		    	vWorldTextureCoord = aWorldTextureCoord;
+				vTransformedNormal = uNMatrix * aVertexNormal;
+		    }
+		</script>
+		<script id="fragment-shader" type="x-shader/x-fragment">
+			// Create a basic fragment shader that sets the vertex color.
+			precision mediump float;
+
+			varying vec2 vTextureCoord;
+			varying vec2 vWorldTextureCoord;
+			varying vec3 vTransformedNormal;
+			varying vec4 vPosition;
+
+      		// Lighting variables.
+      		uniform float uMaterialShininess;
+      		uniform vec3 uAmbientColor;
+			uniform vec3 uPointLightLocation;
+			uniform vec3 uPointLightSpecularColor;
+      		uniform vec3 uDirectionalColor;
+      		uniform vec3 uLightingDirection;
+
+      		uniform bool uUseLighting;
+
+			uniform sampler2D uSampler;
+			uniform sampler2D uWorldSampler;
+
+			void main(void) {
+				vec3 vLightWeighting;
+				highp vec3 uAmbientColor = vec3(0.3, 0.3, 0.3);
+				highp vec3 uDirectionalColor = vec3(0.5, 0.5, 0.75);
+				highp vec3 uLightingDirection = vec3(0.85, 0.8, 0.95);
+
+				vec3 pointLightDirection = normalize(uPointLightLocation - vPosition.xyz);
+
+				// When normals are interpolated across vertices, the fragment
+				// normals aren't necessarily unit length.
+				vec3 normal = normalize(vTransformedNormal);
+
+				// Specfular calculations.
+				vec3 eyeDirection = normalize(-vPosition.xyz);
+				vec3 reflectionDirection = reflect(-pointLightDirection, normal);
+				float specularLightWeighting = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
+
+				// Use the saved normal.
+				float directionalLightWeighting = max(dot(normal, pointLightDirection), 0.0);
+				vLightWeighting = uAmbientColor +
+						(uDirectionalColor * directionalLightWeighting) +
+						(uPointLightSpecularColor * specularLightWeighting);
+
+				// Get the pot's texture pixel color.
+				vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+
+				// Get the environment map's color.
+				float len = sqrt(
+						reflectionDirection.x*reflectionDirection.x +
+						reflectionDirection.y*reflectionDirection.y +
+						reflectionDirection.z*reflectionDirection.z);
+				vec4 worldTextureColor = texture2D(
+						uWorldSampler,
+						vec2(
+							(reflectionDirection.x/len + 1.0) / 2.0,
+							(reflectionDirection.y/len + 1.0) / 2.0));
+
+				// Combine the texture, environment, and lighting into a final
+				// color.
+				gl_FragColor = vec4((textureColor.rgb*0.75 + worldTextureColor.rgb*0.25) * vLightWeighting, textureColor.a);
+		    }
+		</script>
+		<script src="js/glMatrix.min.js"></script>
+		<script src="js/webgl-utils.js"></script>
+		<script src="js/ui.js"></script>
+		<script src="js/fps.js"></script>
+		<script src="js/controls.js"></script>
+		<script src="js/obj_loader.js"></script>
+		<script src="js/buffers.js"></script>
+		<script src="js/shaders.js"></script>
+		<script src="js/textures.js"></script>
+		<script src="js/app.js"></script>
+	</body>
+</html>

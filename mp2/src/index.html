@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>MP2 - Flight Simulator</title>
+		<link href='http://fonts.googleapis.com/css?family=Lato:100,300,400,700|Merriweather:400,300italic,300,700,900' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" type="text/css" href="main.css">
+	</head>
+	<body>
+		<div class="leader">MP2</div>
+		<h2 class="title">Flight Simulator</h2>
+		<div id="cover"></div>
+		<div id="content">
+			<canvas id="canvas">Sorry, your browser doesn't seem to support the canvas element.</canvas>
+			<div id="fpsMeter"></div>
+			<p class="description">A classic flight simulator, without the airplane!  Control your motion (roll and pitch) with the arrow keys.</p>
+		</div>
+
+		<script id="vertex-shader" type="x-shader/x-vertex">
+			// Create a basic vertex shader that sets the positions.
+			attribute vec3 aVertexPosition;
+		    attribute vec4 aVertexColor;
+
+		    // Create a uniform model-view and perspective matrix.
+		    uniform mat4 uMVMatrix;
+      		uniform mat4 uPMatrix;
+		    
+		    varying lowp vec4 vColor;
+		    
+		    void main(void) {
+		    	gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+
+		    	vColor = aVertexColor;
+		    }
+		</script>
+		<script id="fragment-shader" type="x-shader/x-fragment">
+			// Create a basic fragment shader that sets the vertex color.
+			precision mediump float;
+
+		    varying vec4 vColor;
+
+		    void main(void) {
+		        gl_FragColor = vColor;
+		    }
+		</script>
+		<script src="js/webgl-utils.js"></script>
+		<script src="js/glMatrix.min.js"></script>
+		<script src="js/fps.js"></script>
+		<script src="js/controls.js"></script>
+		<script src="js/app.js"></script>
+	</body>
+</html>
